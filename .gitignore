@@ -1,0 +1,6 @@
+node_modules/
+.env
+server/secureid.db
+*.db
+*.db-shm
+*.db-wal

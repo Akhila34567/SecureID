@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecureID</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+    <!-- ================= LOGIN ================= -->
+
+    <div
+        class="login-card"
+        id="loginScreen"
+    >
+
+        <div class="logo">
+            <div class="shield">◆</div>
+        </div>
+
+        <h1>Welcome back!</h1>
+
+        <p class="subtitle">
+            Log in to your account
+        </p>
+
+
+        <form id="loginForm">
+
+            <div class="form-group">
+
+                <label for="loginEmail">
+                    Email or username
+                </label>
+
+                <input
+                    type="text"
+                    id="loginEmail"
+                    placeholder="Enter your email or username"
+                >
+
+                <small id="loginEmailError"></small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <div class="password-label">
+
+                    <label for="loginPassword">
+                        Password
+                    </label>
+
+                    <a
+                        href="#"
+                        id="forgotPassword"
+                    >
+                        Forgot password?
+                    </a>
+
+                </div>
+
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="Enter your password"
+                    >
+
+                    <button
+                        type="button"
+                        id="toggleLoginPassword"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+                <small id="loginPasswordError"></small>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                Login
+            </button>
+
+
+            <div id="loginMessage"></div>
+
+        </form>
+
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+
+        <button
+            type="button"
+            class="google-button"
+        >
+            <span class="google-icon">G</span>
+            Continue with Google
+        </button>
+
+
+        <p class="signup-text">
+
+            New to SecureID?
+
+            <a
+                href="#"
+                id="createAccount"
+            >
+                Create an account
+            </a>
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= REGISTRATION ================= -->
+
+    <div
+        class="login-card hidden"
+        id="registrationScreen"
+    >
+
+        <div class="logo">
+            <div class="shield">◆</div>
+        </div>
+
+        <h1>Create your account</h1>
+
+        <p class="subtitle">
+            Register for a SecureID account
+        </p>
+
+
+        <form id="registrationForm">
+
+
+            <div class="form-group">
+
+                <label for="registerName">
+                    Full name
+                </label>
+
+                <input
+                    type="text"
+                    id="registerName"
+                    placeholder="Enter your full name"
+                >
+
+                <small id="nameError"></small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="registerEmail">
+                    Email address
+                </label>
+
+                <input
+                    type="email"
+                    id="registerEmail"
+                    placeholder="Enter your email"
+                >
+
+                <small id="registerEmailError"></small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="registerPhone">
+                    Mobile number
+                </label>
+
+                <input
+                    type="tel"
+                    id="registerPhone"
+                    placeholder="Enter your mobile number"
+                >
+
+                <small id="phoneError"></small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="registerPassword">
+                    Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        placeholder="Create a password"
+                    >
+
+                    <button
+                        type="button"
+                        id="toggleRegisterPassword"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+                <small id="registerPasswordError"></small>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                Create account
+            </button>
+
+
+            <div id="registrationMessage"></div>
+
+        </form>
+
+
+        <p class="signup-text">
+
+            Already have an account?
+
+            <a
+                href="#"
+                id="backToLogin"
+            >
+                Login
+            </a>
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= EMAIL OTP ================= -->
+
+    <div
+        class="login-card hidden"
+        id="emailOTPScreen"
+    >
+
+        <div class="logo">
+            <div class="shield">✉</div>
+        </div>
+
+        <h1>Verify your email</h1>
+        
+
+        <p class="subtitle">
+            Enter the 6-digit code sent to your email address.
+        </p>
+
+
+        <div class="form-group">
+
+            <label for="emailOTP">
+                Email verification code
+            </label>
+
+            <input
+                type="text"
+                id="emailOTP"
+                maxlength="6"
+                inputmode="numeric"
+                placeholder="Enter 6-digit OTP"
+            >
+
+            <small id="emailOTPError"></small>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="login-button"
+            id="verifyEmailOTP"
+        >
+            Verify email
+        </button>
+        <p class="signup-text">
+    Didn't receive the code?
+    <a href="#" id="resendEmailOTP">Resend code</a>
+</p>
+
+<div id="emailResendTimer"></div>
+
+
+        <div id="emailOTPMessage"></div>
+
+
+        <p class="signup-text">
+
+            <a
+                href="#"
+                id="backToRegistration"
+            >
+                Back to registration
+            </a>
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= SMS OTP ================= -->
+
+    <div
+        class="login-card hidden"
+        id="smsOTPScreen"
+    >
+
+        <div class="logo">
+            <div class="shield">📱</div>
+        </div>
+
+        <h1>Verify your phone</h1>
+
+        <p class="subtitle">
+            Enter the 6-digit code sent to your mobile number.
+        </p>
+
+
+        <div class="form-group">
+
+            <label for="smsOTP">
+                SMS verification code
+            </label>
+
+            <input
+                type="text"
+                id="smsOTP"
+                maxlength="6"
+                inputmode="numeric"
+                placeholder="Enter 6-digit OTP"
+            >
+
+            <small id="smsOTPError"></small>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="login-button"
+            id="verifySMSOTP"
+        >
+            Verify phone
+        </button>
+        <div id="smsResendTimer"></div>
+
+
+        <div id="smsOTPMessage"></div>
+
+
+        <p class="signup-text">
+
+            Didn't receive the code?
+
+            <a
+                href="#"
+                id="resendSMSOTP"
+            >
+                Resend code
+            </a>
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= REGISTRATION SUCCESS ================= -->
+
+    <div
+        class="login-card hidden"
+        id="successScreen"
+    >
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h1>
+            Registration successful!
+        </h1>
+
+        <p class="subtitle">
+            Your email and phone have been verified.
+            Multi-factor authentication is now enabled.
+        </p>
+
+        <button
+            type="button"
+            class="login-button"
+            id="goToLogin"
+        >
+            Continue to Login
+        </button>
+
+    </div>
+
+
+   
+<!-- ================= LOGIN OTP ================= -->
+
+<div
+    class="login-card hidden"
+    id="loginOTPScreen"
+>
+
+    <div class="logo">
+        <div class="shield">✉</div>
+    </div>
+
+    <h1>Email Verification</h1>
+
+    <p class="subtitle">
+        Enter the 6-digit code sent to your email.
+    </p>
+
+
+    <div class="form-group">
+
+        <label for="loginOTP">
+            Verification code
+        </label>
+
+        <input
+            type="text"
+            id="loginOTP"
+            maxlength="6"
+            inputmode="numeric"
+            placeholder="Enter 6-digit OTP"
+        >
+
+        <small id="loginOTPError"></small>
+
+    </div>
+
+
+    <button
+        type="button"
+        class="login-button"
+        id="verifyLoginOTP"
+    >
+        Verify and Login
+    </button>
+
+
+    <div id="loginOTPMessage"></div>
+
+
+    <p class="signup-text">
+
+        <a
+            href="#"
+            id="backToLoginFromOTP"
+        >
+            Back to login
+        </a>
+
+    </p>
+
+</div>
+
+
+<!-- ================= DASHBOARD ================= -->
+
+<div
+    class="login-card hidden"
+    id="dashboardScreen"
+>
+
+    <div class="logo">
+        <div class="shield">✓</div>
+    </div>
+
+
+    <h1>Welcome!</h1>
+
+
+    <p class="subtitle">
+        You are securely logged in to SecureID.
+    </p>
+
+
+    <div class="dashboard-info">
+
+        <p>
+            <strong>Name:</strong>
+            <span id="dashboardName"></span>
+        </p>
+
+
+        <p>
+            <strong>Email:</strong>
+            <span id="dashboardEmail"></span>
+        </p>
+
+
+        <p>
+            <strong>MFA:</strong>
+            <span id="dashboardMFA"></span>
+        </p>
+
+    </div>
+
+
+    <div id="dashboardMessage"></div>
+
+
+    <button
+        type="button"
+        class="login-button"
+        id="logoutButton"
+    >
+        Logout
+    </button>
+
+</div>
+
+
+</div>
+<!-- ================= FORGOT PASSWORD ================= -->
+
+<div
+    class="login-card hidden"
+    id="forgotPasswordScreen"
+>
+
+    <div class="logo">
+        <div class="shield">?</div>
+    </div>
+
+    <h1>Forgot password?</h1>
+
+    <p class="subtitle">
+        Enter your email and we'll send you a verification code.
+    </p>
+
+
+    <!-- EMAIL -->
+
+    <div class="form-group">
+
+        <label for="forgotEmail">
+            Email address
+        </label>
+
+        <input
+            type="email"
+            id="forgotEmail"
+            placeholder="Enter your email"
+        >
+
+    </div>
+
+
+    <button
+        type="button"
+        class="login-button"
+        id="sendResetOTP"
+    >
+        Send verification code
+    </button>
+
+
+    <div id="forgotPasswordMessage"></div>
+
+
+    <p class="signup-text">
+
+        <a
+            href="#"
+            id="backToLoginFromForgot"
+        >
+            Back to login
+        </a>
+
+    </p>
+
+</div>
+
+
+<!-- ================= RESET OTP ================= -->
+
+<div
+    class="login-card hidden"
+    id="resetOTPScreen"
+>
+
+    <div class="logo">
+        <div class="shield">✉</div>
+    </div>
+
+    <h1>Verify your email</h1>
+
+    <p class="subtitle">
+        Enter the 6-digit password reset code.
+    </p>
+
+
+    <div class="form-group">
+
+        <label for="resetOTP">
+            Verification code
+        </label>
+
+        <input
+            type="text"
+            id="resetOTP"
+            maxlength="6"
+            inputmode="numeric"
+            placeholder="Enter 6-digit OTP"
+        >
+
+    </div>
+
+
+    <button
+        type="button"
+        class="login-button"
+        id="verifyResetOTP"
+    >
+        Verify code
+    </button>
+
+
+    <div id="resetOTPMessage"></div>
+
+</div>
+
+
+<!-- ================= NEW PASSWORD ================= -->
+
+<div
+    class="login-card hidden"
+    id="newPasswordScreen"
+>
+
+    <div class="logo">
+        <div class="shield">🔐</div>
+    </div>
+
+    <h1>Create new password</h1>
+
+    <p class="subtitle">
+        Choose a new password for your SecureID account.
+    </p>
+
+
+    <div class="form-group">
+
+        <label for="newPassword">
+            New password
+        </label>
+
+        <input
+            type="password"
+            id="newPassword"
+            placeholder="Enter new password"
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="confirmPassword">
+            Confirm password
+        </label>
+
+        <input
+            type="password"
+            id="confirmPassword"
+            placeholder="Confirm new password"
+        >
+
+    </div>
+
+
+    <button
+        type="button"
+        class="login-button"
+        id="resetPasswordButton"
+    >
+        Reset password
+    </button>
+
+
+    <div id="resetPasswordMessage"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
