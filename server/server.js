@@ -571,9 +571,7 @@ app.post(
     userId
 };
 
-if (process.env.OTP_DEBUG === "true") {
-    response.debugOtp = challenge.otp;
-}
+
 
 return res.status(201).json(response);
         } catch (error) {
@@ -653,25 +651,15 @@ app.post(
                 challenge.otp
             );
 
-           const response = {
+          return res.json({
 
     message:
         "Email OTP sent successfully.",
 
     challengeId:
         challenge.challengeId
-};
 
-response.debugEnabled =
-    process.env.OTP_DEBUG === "true";
-
-if (process.env.OTP_DEBUG === "true") {
-
-    response.debugOtp =
-        challenge.otp;
-}
-
-return res.json(response);
+});
 
         } catch (error) {
 
