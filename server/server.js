@@ -647,14 +647,22 @@ app.post(
                 challenge.otp
             );
 
-            return res.json({
+           const response = {
 
-                message:
-                    "Email OTP sent successfully.",
+    message:
+        "Email OTP sent successfully.",
 
-                challengeId:
-                    challenge.challengeId
-            });
+    challengeId:
+        challenge.challengeId
+};
+
+if (process.env.OTP_DEBUG === "true") {
+
+    response.debugOtp =
+        challenge.otp;
+}
+
+return res.json(response);
 
         } catch (error) {
 
