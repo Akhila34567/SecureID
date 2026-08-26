@@ -71,6 +71,21 @@ function showEmailOTP() {
 
     hideAllScreens();
 
+    const otpInput =
+        document.getElementById("emailOTP");
+
+    if (otpInput) {
+        otpInput.value = "";
+        otpInput.focus();
+    }
+
+    const message =
+        document.getElementById("emailOTPMessage");
+
+    if (message) {
+        message.textContent = "";
+    }
+
     emailOTPScreen.classList.remove("hidden");
 
 }
@@ -79,6 +94,21 @@ function showEmailOTP() {
 function showSMSOTP() {
 
     hideAllScreens();
+
+    const otpInput =
+        document.getElementById("smsOTP");
+
+    if (otpInput) {
+        otpInput.value = "";
+        otpInput.focus();
+    }
+
+    const message =
+        document.getElementById("smsOTPMessage");
+
+    if (message) {
+        message.textContent = "";
+    }
 
     smsOTPScreen.classList.remove("hidden");
 
@@ -97,6 +127,28 @@ function showSuccess() {
 function showLoginOTP() {
 
     hideAllScreens();
+
+    const otpInput =
+        document.getElementById("loginOTP");
+
+    if (otpInput) {
+        otpInput.value = "";
+        otpInput.focus();
+    }
+
+    const message =
+        document.getElementById("loginOTPMessage");
+
+    const error =
+        document.getElementById("loginOTPError");
+
+    if (message) {
+        message.textContent = "";
+    }
+
+    if (error) {
+        error.textContent = "";
+    }
 
     loginOTPScreen.classList.remove("hidden");
 
@@ -124,6 +176,21 @@ function showForgotPassword() {
 function showResetOTP() {
 
     hideAllScreens();
+
+    const otpInput =
+        document.getElementById("resetOTP");
+
+    if (otpInput) {
+        otpInput.value = "";
+        otpInput.focus();
+    }
+
+    const message =
+        document.getElementById("resetOTPMessage");
+
+    if (message) {
+        message.textContent = "";
+    }
 
     resetOTPScreen.classList.remove("hidden");
 
@@ -214,9 +281,7 @@ document
                     "forgotPasswordMessage"
                 );
 
-
             message.textContent = "";
-
 
             if (!email) {
 
@@ -227,10 +292,8 @@ document
 
             }
 
-
             message.textContent =
                 "Sending verification code...";
-
 
             try {
 
@@ -252,10 +315,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -266,7 +327,6 @@ document
                     return;
 
                 }
-
 
                 if (data.challengeId) {
 
@@ -283,7 +343,6 @@ document
                         data.message;
 
                 }
-
 
             } catch (error) {
 
@@ -314,18 +373,15 @@ document
                     .value
                     .trim();
 
-
             const challengeId =
                 sessionStorage.getItem(
                     "resetChallengeId"
                 );
 
-
             const message =
                 document.getElementById(
                     "resetOTPMessage"
                 );
-
 
             if (!/^\d{6}$/.test(otp)) {
 
@@ -336,7 +392,6 @@ document
 
             }
 
-
             if (!challengeId) {
 
                 message.textContent =
@@ -346,10 +401,8 @@ document
 
             }
 
-
             message.textContent =
                 "Verifying code...";
-
 
             try {
 
@@ -372,10 +425,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -387,15 +438,12 @@ document
 
                 }
 
-
                 sessionStorage.setItem(
                     "resetToken",
                     data.resetToken
                 );
 
-
                 showNewPassword();
-
 
             } catch (error) {
 
@@ -425,29 +473,22 @@ document
                     .getElementById("newPassword")
                     .value;
 
-
             const confirmPassword =
                 document
                     .getElementById("confirmPassword")
                     .value;
-
 
             const resetToken =
                 sessionStorage.getItem(
                     "resetToken"
                 );
 
-
             const message =
                 document.getElementById(
                     "resetPasswordMessage"
                 );
 
-
             message.textContent = "";
-
-
-            // PASSWORD LENGTH
 
             if (newPassword.length < 8) {
 
@@ -458,9 +499,6 @@ document
 
             }
 
-
-            // UPPERCASE
-
             if (!/[A-Z]/.test(newPassword)) {
 
                 message.textContent =
@@ -469,9 +507,6 @@ document
                 return;
 
             }
-
-
-            // LOWERCASE
 
             if (!/[a-z]/.test(newPassword)) {
 
@@ -482,9 +517,6 @@ document
 
             }
 
-
-            // NUMBER
-
             if (!/[0-9]/.test(newPassword)) {
 
                 message.textContent =
@@ -494,9 +526,6 @@ document
 
             }
 
-
-            // SPECIAL CHARACTER
-
             if (!/[^A-Za-z0-9]/.test(newPassword)) {
 
                 message.textContent =
@@ -505,9 +534,6 @@ document
                 return;
 
             }
-
-
-            // CONFIRM PASSWORD
 
             if (
                 newPassword !==
@@ -521,7 +547,6 @@ document
 
             }
 
-
             if (!resetToken) {
 
                 message.textContent =
@@ -531,10 +556,8 @@ document
 
             }
 
-
             message.textContent =
                 "Resetting password...";
-
 
             try {
 
@@ -557,10 +580,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -572,13 +593,10 @@ document
 
                 }
 
-
                 sessionStorage.clear();
-
 
                 message.textContent =
                     "Password reset successfully. Returning to login...";
-
 
                 setTimeout(
                     function () {
@@ -588,7 +606,6 @@ document
                     },
                     1500
                 );
-
 
             } catch (error) {
 
@@ -636,7 +653,6 @@ document
                     "loginPassword"
                 );
 
-
             if (
                 password.type === "password"
             ) {
@@ -667,7 +683,6 @@ document
                 document.getElementById(
                     "registerPassword"
                 );
-
 
             if (
                 password.type === "password"
@@ -701,13 +716,11 @@ document
 
             event.preventDefault();
 
-
             const email =
                 document
                     .getElementById("loginEmail")
                     .value
                     .trim();
-
 
             const password =
                 document
@@ -715,15 +728,12 @@ document
                     .value
                     .trim();
 
-
             const message =
                 document.getElementById(
                     "loginMessage"
                 );
 
-
             message.textContent = "";
-
 
             if (!email || !password) {
 
@@ -734,10 +744,8 @@ document
 
             }
 
-
             message.textContent =
                 "Checking your credentials...";
-
 
             try {
 
@@ -762,10 +770,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -777,13 +783,20 @@ document
 
                 }
 
-
                 if (data.mfaRequired) {
 
                     sessionStorage.setItem(
                         "loginChallengeId",
                         data.challengeId
                     );
+
+                    // Clear any OTP left from a previous login
+                    const otpInput =
+                        document.getElementById("loginOTP");
+
+                    if (otpInput) {
+                        otpInput.value = "";
+                    }
 
                     showLoginOTP();
 
@@ -812,45 +825,51 @@ document
         "click",
         async function () {
 
-            const otp =
-                document
-                    .getElementById("loginOTP")
-                    .value
-                    .trim();
+            const otpInput =
+                document.getElementById("loginOTP");
 
+            const otp =
+                otpInput.value.trim();
 
             const challengeId =
                 sessionStorage.getItem(
                     "loginChallengeId"
                 );
 
-
             const error =
                 document.getElementById(
                     "loginOTPError"
                 );
-
 
             const message =
                 document.getElementById(
                     "loginOTPMessage"
                 );
 
-
             error.textContent = "";
-
             message.textContent = "";
 
+            if (!otp) {
+
+                error.textContent =
+                    "Please enter the OTP.";
+
+                otpInput.focus();
+
+                return;
+
+            }
 
             if (!/^\d{6}$/.test(otp)) {
 
                 error.textContent =
                     "Enter a valid 6-digit OTP.";
 
+                otpInput.focus();
+
                 return;
 
             }
-
 
             if (!challengeId) {
 
@@ -861,10 +880,8 @@ document
 
             }
 
-
             message.textContent =
                 "Verifying OTP...";
-
 
             try {
 
@@ -889,10 +906,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -900,18 +915,22 @@ document
                         data.message ||
                         "OTP verification failed.";
 
+                    // Clear incorrect OTP
+                    otpInput.value = "";
+
+                    otpInput.focus();
+
                     return;
 
                 }
 
+                otpInput.value = "";
 
                 sessionStorage.removeItem(
                     "loginChallengeId"
                 );
 
-
                 await loadDashboard();
-
 
             } catch (error) {
 
@@ -943,10 +962,8 @@ async function loadDashboard() {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         if (!response.ok) {
 
@@ -956,18 +973,15 @@ async function loadDashboard() {
 
         }
 
-
         document.getElementById(
             "dashboardName"
         ).textContent =
             data.user.name;
 
-
         document.getElementById(
             "dashboardEmail"
         ).textContent =
             data.user.email;
-
 
         document.getElementById(
             "dashboardMFA"
@@ -976,9 +990,7 @@ async function loadDashboard() {
                 ? "Enabled"
                 : "Disabled";
 
-
         showDashboard();
-
 
     } catch (error) {
 
@@ -1006,7 +1018,6 @@ document
                     "dashboardMessage"
                 );
 
-
             try {
 
                 const response =
@@ -1018,10 +1029,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -1033,11 +1042,38 @@ document
 
                 }
 
-
                 sessionStorage.clear();
 
-                showLogin();
+                // Clear all OTP fields after logout
+                const loginOTP =
+                    document.getElementById("loginOTP");
 
+                const emailOTP =
+                    document.getElementById("emailOTP");
+
+                const smsOTP =
+                    document.getElementById("smsOTP");
+
+                const resetOTP =
+                    document.getElementById("resetOTP");
+
+                if (loginOTP) {
+                    loginOTP.value = "";
+                }
+
+                if (emailOTP) {
+                    emailOTP.value = "";
+                }
+
+                if (smsOTP) {
+                    smsOTP.value = "";
+                }
+
+                if (resetOTP) {
+                    resetOTP.value = "";
+                }
+
+                showLogin();
 
             } catch (error) {
 
@@ -1064,13 +1100,11 @@ document
 
             event.preventDefault();
 
-
             const name =
                 document
                     .getElementById("registerName")
                     .value
                     .trim();
-
 
             const email =
                 document
@@ -1078,13 +1112,11 @@ document
                     .value
                     .trim();
 
-
             const phone =
                 document
                     .getElementById("registerPhone")
                     .value
                     .trim();
-
 
             const password =
                 document
@@ -1092,12 +1124,10 @@ document
                     .value
                     .trim();
 
-
             const message =
                 document.getElementById(
                     "registrationMessage"
                 );
-
 
             if (
                 !name ||
@@ -1113,9 +1143,6 @@ document
 
             }
 
-
-            // PASSWORD STRENGTH
-
             if (password.length < 8) {
 
                 message.textContent =
@@ -1124,7 +1151,6 @@ document
                 return;
 
             }
-
 
             if (!/[A-Z]/.test(password)) {
 
@@ -1135,7 +1161,6 @@ document
 
             }
 
-
             if (!/[a-z]/.test(password)) {
 
                 message.textContent =
@@ -1144,7 +1169,6 @@ document
                 return;
 
             }
-
 
             if (!/[0-9]/.test(password)) {
 
@@ -1155,7 +1179,6 @@ document
 
             }
 
-
             if (!/[^A-Za-z0-9]/.test(password)) {
 
                 message.textContent =
@@ -1165,10 +1188,8 @@ document
 
             }
 
-
             message.textContent =
                 "Creating your account...";
-
 
             try {
 
@@ -1193,10 +1214,8 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -1208,19 +1227,25 @@ document
 
                 }
 
-
                 sessionStorage.setItem(
                     "registrationChallengeId",
                     data.challengeId
                 );
-                sessionStorage.setItem(
-    "registrationEmail",
-    email
-);
 
+                sessionStorage.setItem(
+                    "registrationEmail",
+                    email
+                );
+
+                // Always start with an empty email OTP field
+                const emailOTP =
+                    document.getElementById("emailOTP");
+
+                if (emailOTP) {
+                    emailOTP.value = "";
+                }
 
                 showEmailOTP();
-
 
             } catch (error) {
 
@@ -1245,34 +1270,52 @@ document
         "click",
         async function () {
 
-            const otp =
-                document
-                    .getElementById("emailOTP")
-                    .value
-                    .trim();
+            const otpInput =
+                document.getElementById("emailOTP");
 
+            const otp =
+                otpInput.value.trim();
 
             const challengeId =
                 sessionStorage.getItem(
                     "registrationChallengeId"
                 );
 
-
             const message =
                 document.getElementById(
                     "emailOTPMessage"
                 );
 
+            if (!otp) {
+
+                message.textContent =
+                    "Please enter the OTP.";
+
+                otpInput.focus();
+
+                return;
+
+            }
 
             if (!/^\d{6}$/.test(otp)) {
 
                 message.textContent =
                     "Enter a valid 6-digit OTP.";
 
+                otpInput.focus();
+
                 return;
 
             }
 
+            if (!challengeId) {
+
+                message.textContent =
+                    "Registration session expired. Please register again.";
+
+                return;
+
+            }
 
             try {
 
@@ -1295,29 +1338,31 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
                     message.textContent =
-                        data.message;
+                        data.message ||
+                        "Incorrect OTP.";
+
+                    otpInput.value = "";
+
+                    otpInput.focus();
 
                     return;
 
                 }
 
+                otpInput.value = "";
 
                 sessionStorage.setItem(
                     "registrationUserId",
                     data.userId
                 );
 
-
                 await sendSMSOTP();
-
 
             } catch (error) {
 
@@ -1343,7 +1388,6 @@ async function sendSMSOTP() {
             "registrationUserId"
         );
 
-
     try {
 
         const response =
@@ -1364,10 +1408,8 @@ async function sendSMSOTP() {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         if (!response.ok) {
 
@@ -1375,15 +1417,20 @@ async function sendSMSOTP() {
 
         }
 
-
         sessionStorage.setItem(
             "smsChallengeId",
             data.challengeId
         );
 
+        // Always clear old SMS OTP
+        const smsOTP =
+            document.getElementById("smsOTP");
+
+        if (smsOTP) {
+            smsOTP.value = "";
+        }
 
         showSMSOTP();
-
 
     } catch (error) {
 
@@ -1404,34 +1451,52 @@ document
         "click",
         async function () {
 
-            const otp =
-                document
-                    .getElementById("smsOTP")
-                    .value
-                    .trim();
+            const otpInput =
+                document.getElementById("smsOTP");
 
+            const otp =
+                otpInput.value.trim();
 
             const challengeId =
                 sessionStorage.getItem(
                     "smsChallengeId"
                 );
 
-
             const message =
                 document.getElementById(
                     "smsOTPMessage"
                 );
 
+            if (!otp) {
+
+                message.textContent =
+                    "Please enter the OTP.";
+
+                otpInput.focus();
+
+                return;
+
+            }
 
             if (!/^\d{6}$/.test(otp)) {
 
                 message.textContent =
                     "Enter a valid 6-digit OTP.";
 
+                otpInput.focus();
+
                 return;
 
             }
 
+            if (!challengeId) {
+
+                message.textContent =
+                    "Registration session expired. Please register again.";
+
+                return;
+
+            }
 
             try {
 
@@ -1454,27 +1519,33 @@ document
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
                     message.textContent =
-                        data.message;
+                        data.message ||
+                        "Incorrect OTP.";
+
+                    otpInput.value = "";
+
+                    otpInput.focus();
 
                     return;
 
                 }
 
+                otpInput.value = "";
 
                 showSuccess();
-
 
             } catch (error) {
 
                 console.error(error);
+
+                message.textContent =
+                    "Unable to connect to the server.";
 
             }
 
@@ -1493,6 +1564,34 @@ document
         function () {
 
             sessionStorage.clear();
+
+            const loginOTP =
+                document.getElementById("loginOTP");
+
+            const emailOTP =
+                document.getElementById("emailOTP");
+
+            const smsOTP =
+                document.getElementById("smsOTP");
+
+            const resetOTP =
+                document.getElementById("resetOTP");
+
+            if (loginOTP) {
+                loginOTP.value = "";
+            }
+
+            if (emailOTP) {
+                emailOTP.value = "";
+            }
+
+            if (smsOTP) {
+                smsOTP.value = "";
+            }
+
+            if (resetOTP) {
+                resetOTP.value = "";
+            }
 
             showLogin();
 
@@ -1516,10 +1615,19 @@ document
                 "loginChallengeId"
             );
 
+            const otpInput =
+                document.getElementById("loginOTP");
+
+            if (otpInput) {
+                otpInput.value = "";
+            }
+
             showLogin();
 
         }
     );
+
+
 // =====================================================
 // OTP RESEND COUNTDOWN
 // =====================================================
@@ -1575,7 +1683,6 @@ document
                     await fetch(
                         "/api/resend-email-otp",
                         {
-
                             method: "POST",
 
                             headers: {
@@ -1587,14 +1694,11 @@ document
                                 JSON.stringify({
                                     email
                                 })
-
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (!response.ok) {
 
@@ -1606,19 +1710,24 @@ document
 
                 }
 
-
                 sessionStorage.setItem(
                     "registrationChallengeId",
                     data.challengeId
                 );
 
+                // Clear old OTP when a new OTP is requested
+                const otpInput =
+                    document.getElementById("emailOTP");
+
+                if (otpInput) {
+                    otpInput.value = "";
+                    otpInput.focus();
+                }
 
                 timer.textContent =
                     data.message;
 
-
                 startEmailCountdown();
-
 
             } catch (error) {
 
@@ -1631,6 +1740,8 @@ document
 
         }
     );
+
+
 // =====================================================
 // EMAIL COUNTDOWN
 // =====================================================
@@ -1644,7 +1755,6 @@ function startEmailCountdown() {
             "emailResendTimer"
         );
 
-
     if (emailTimerInterval) {
 
         clearInterval(
@@ -1652,7 +1762,6 @@ function startEmailCountdown() {
         );
 
     }
-
 
     emailTimerInterval =
         setInterval(
@@ -1662,7 +1771,6 @@ function startEmailCountdown() {
                     `Resend available in ${emailResendTimer}s`;
 
                 emailResendTimer--;
-
 
                 if (
                     emailResendTimer < 0
@@ -1697,7 +1805,6 @@ function startSMSCountdown() {
             "smsResendTimer"
         );
 
-
     if (smsTimerInterval) {
 
         clearInterval(
@@ -1705,7 +1812,6 @@ function startSMSCountdown() {
         );
 
     }
-
 
     smsTimerInterval =
         setInterval(
@@ -1715,7 +1821,6 @@ function startSMSCountdown() {
                     `Resend available in ${smsResendTimer}s`;
 
                 smsResendTimer--;
-
 
                 if (
                     smsResendTimer < 0
