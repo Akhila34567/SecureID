@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const session = require("express-session");
 const helmet = require("helmet");
 const path = require("path");
@@ -11,24 +12,15 @@ const db = require("./database");
 
 const app = express();
 
-
 // =====================================================
 // SECURITY SETTINGS
 // =====================================================
 
 const MAX_OTP_ATTEMPTS = 5;
-
 const MAX_LOGIN_ATTEMPTS = 5;
-
-const OTP_EXPIRY =
-    5 * 60 * 1000;
-
-const LOCKOUT_TIME =
-    5 * 60 * 1000;
-
-const OTP_RESEND_COOLDOWN =
-    60 * 1000;
-
+const OTP_EXPIRY = 5 * 60 * 1000;
+const LOCKOUT_TIME = 5 * 60 * 1000;
+const OTP_RESEND_COOLDOWN = 60 * 1000;
 
 // =====================================================
 // MIDDLEWARE
@@ -42,7 +34,7 @@ app.use(
 
 app.use(
     cors({
-        origin: "http://localhost:3000",
+        origin: true,
         credentials: true
     })
 );
@@ -86,67 +78,43 @@ app.get("/", (req, res) => {
 function validatePassword(password) {
 
     if (!password || password.length < 8) {
-
         return "Password must be at least 8 characters long.";
-
     }
 
     if (!/[A-Z]/.test(password)) {
-
         return "Password must contain at least one uppercase letter.";
-
     }
 
     if (!/[a-z]/.test(password)) {
-
         return "Password must contain at least one lowercase letter.";
-
     }
 
     if (!/[0-9]/.test(password)) {
-
         return "Password must contain at least one number.";
-
     }
 
     if (!/[^A-Za-z0-9]/.test(password)) {
-
         return "Password must contain at least one special character.";
-
     }
 
     return null;
-
 }
-
 
 // =====================================================
 // INPUT VALIDATION
 // =====================================================
 
 function isValidEmail(email) {
-
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        .test(email);
-
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
 
 function isValidPhone(phone) {
-
-    return /^[0-9]{10}$/
-        .test(phone);
-
+    return /^[0-9]{10}$/.test(phone);
 }
-
 
 function isValidOTP(otp) {
-
-    return /^[0-9]{6}$/
-        .test(otp);
-
+    return /^[0-9]{6}$/.test(otp);
 }
-
 
 // =====================================================
 // OTP FUNCTIONS
@@ -157,9 +125,7 @@ function generateOTP() {
     return crypto
         .randomInt(100000, 1000000)
         .toString();
-
 }
-
 
 function hashOTP(otp) {
 
@@ -167,9 +133,7 @@ function hashOTP(otp) {
         .createHash("sha256")
         .update(otp)
         .digest("hex");
-
 }
-
 
 // =====================================================
 // DATABASE USER HELPERS
@@ -186,9 +150,7 @@ function findUserById(userId) {
             `
         )
         .get(userId);
-
 }
-
 
 function findUserByEmail(email) {
 
@@ -201,18 +163,13 @@ function findUserByEmail(email) {
             `
         )
         .get(email);
-
 }
-
 
 // =====================================================
 // OTP CHALLENGE CREATION
 // =====================================================
 
-function createOTPChallenge(
-    userId,
-    channel
-) {
+function createOTPChallenge(userId, channel) {
 
     const existingChallenge =
         db
@@ -231,10 +188,8 @@ function createOTPChallenge(
             .get(
                 userId,
                 channel,
-                Date.now() -
-                    OTP_RESEND_COOLDOWN
+                Date.now() - OTP_RESEND_COOLDOWN
             );
-
 
     if (existingChallenge) {
 
@@ -250,35 +205,20 @@ function createOTPChallenge(
             );
 
         return {
-
             cooldown: true,
-
             retryAfter
-
         };
-
     }
 
+    const otp = generateOTP();
 
-    const otp =
-        generateOTP();
+    const challengeId = crypto.randomUUID();
 
+    const now = Date.now();
 
-    const challengeId =
-        crypto.randomUUID();
+    const expiresAt = now + OTP_EXPIRY;
 
-
-    const now =
-        Date.now();
-
-
-    const expiresAt =
-        now + OTP_EXPIRY;
-
-
-    const otpHash =
-        hashOTP(otp);
-
+    const otpHash = hashOTP(otp);
 
     db
         .prepare(
@@ -306,17 +246,11 @@ function createOTPChallenge(
             expiresAt
         );
 
-
     return {
-
         challengeId,
-
         otp
-
     };
-
 }
-
 
 // =====================================================
 // VERIFY OTP CHALLENGE
@@ -339,101 +273,53 @@ function verifyOTPChallenge(
             )
             .get(challengeId);
 
-
     if (!challenge) {
 
         return {
-
             success: false,
-
             status: 404,
-
-            message:
-                "OTP challenge not found."
-
+            message: "OTP challenge not found."
         };
-
     }
 
-
-    if (
-        challenge.channel !==
-        channel
-    ) {
+    if (challenge.channel !== channel) {
 
         return {
-
             success: false,
-
             status: 400,
-
-            message:
-                "Invalid OTP challenge."
-
+            message: "Invalid OTP challenge."
         };
-
     }
 
-
-    if (
-        challenge.verified
-    ) {
+    if (challenge.verified) {
 
         return {
-
             success: false,
-
             status: 400,
-
-            message:
-                "This OTP has already been used."
-
+            message: "This OTP has already been used."
         };
-
     }
 
-
-    if (
-        Date.now() >
-        challenge.expires_at
-    ) {
+    if (Date.now() > challenge.expires_at) {
 
         return {
-
             success: false,
-
             status: 400,
-
-            message:
-                "OTP has expired."
-
+            message: "OTP has expired."
         };
-
     }
 
-
-    if (
-        challenge.attempts >=
-        MAX_OTP_ATTEMPTS
-    ) {
+    if (challenge.attempts >= MAX_OTP_ATTEMPTS) {
 
         return {
-
             success: false,
-
             status: 429,
-
-            message:
-                "Maximum OTP attempts reached."
-
+            message: "Maximum OTP attempts reached."
         };
-
     }
-
 
     const newAttempts =
         challenge.attempts + 1;
-
 
     db
         .prepare(
@@ -448,29 +334,16 @@ function verifyOTPChallenge(
             challengeId
         );
 
-
-    if (
-        hashOTP(otp) !==
-        challenge.otp_hash
-    ) {
+    if (hashOTP(otp) !== challenge.otp_hash) {
 
         return {
-
             success: false,
-
             status: 400,
-
-            message:
-                "Incorrect OTP.",
-
+            message: "Incorrect OTP.",
             attemptsRemaining:
-                MAX_OTP_ATTEMPTS -
-                newAttempts
-
+                MAX_OTP_ATTEMPTS - newAttempts
         };
-
     }
-
 
     db
         .prepare(
@@ -482,17 +355,11 @@ function verifyOTPChallenge(
         )
         .run(challengeId);
 
-
     return {
-
         success: true,
-
         challenge
-
     };
-
 }
-
 
 // =====================================================
 // REGISTER
@@ -511,7 +378,6 @@ app.post(
                 password
             } = req.body;
 
-
             if (
                 !name ||
                 !email ||
@@ -520,92 +386,53 @@ app.post(
             ) {
 
                 return res.status(400).json({
-
                     message:
                         "All registration fields are required."
-
                 });
-
             }
 
-
             const normalizedEmail =
-                email
-                    .trim()
-                    .toLowerCase();
-
+                email.trim().toLowerCase();
 
             const normalizedPhone =
                 phone.trim();
 
-
-            if (
-                !isValidEmail(
-                    normalizedEmail
-                )
-            ) {
+            if (!isValidEmail(normalizedEmail)) {
 
                 return res.status(400).json({
-
                     message:
                         "Please enter a valid email address."
-
                 });
-
             }
 
-
-            if (
-                !isValidPhone(
-                    normalizedPhone
-                )
-            ) {
+            if (!isValidPhone(normalizedPhone)) {
 
                 return res.status(400).json({
-
                     message:
                         "Mobile number must contain exactly 10 digits."
-
                 });
-
             }
 
-
             const passwordError =
-                validatePassword(
-                    password
-                );
-
+                validatePassword(password);
 
             if (passwordError) {
 
                 return res.status(400).json({
-
-                    message:
-                        passwordError
-
+                    message: passwordError
                 });
-
             }
 
-
             const existingUser =
-                findUserByEmail(
-                    normalizedEmail
-                );
-
+                findUserByEmail(normalizedEmail);
 
             if (existingUser) {
 
                 return res.status(409).json({
-
                     message:
                         "An account with this email already exists."
-
                 });
-
             }
-
 
             const passwordHash =
                 await bcrypt.hash(
@@ -613,10 +440,8 @@ app.post(
                     10
                 );
 
-
             const userId =
                 crypto.randomUUID();
-
 
             db
                 .prepare(
@@ -647,58 +472,28 @@ app.post(
                     Date.now()
                 );
 
-
             const emailChallenge =
                 createOTPChallenge(
                     userId,
                     "email"
                 );
 
-
-            if (
-                emailChallenge.cooldown
-            ) {
+            if (emailChallenge.cooldown) {
 
                 return res.status(429).json({
-
                     message:
                         `Please wait ${emailChallenge.retryAfter} seconds before requesting another OTP.`
-
                 });
-
             }
 
-
             console.log("");
-
-            console.log(
-                "================================="
-            );
-
-            console.log(
-                "[SIMULATED EMAIL]"
-            );
-
-            console.log(
-                "To:",
-                normalizedEmail
-            );
-
-            console.log(
-                "OTP:",
-                emailChallenge.otp
-            );
-
-            console.log(
-                "Expires in: 5 minutes"
-            );
-
-            console.log(
-                "================================="
-            );
-
+            console.log("=================================");
+            console.log("[SIMULATED EMAIL]");
+            console.log("To:", normalizedEmail);
+            console.log("OTP:", emailChallenge.otp);
+            console.log("Expires in: 5 minutes");
+            console.log("=================================");
             console.log("");
-
 
             return res.status(201).json({
 
@@ -709,26 +504,19 @@ app.post(
                     emailChallenge.challengeId,
 
                 userId
-
             });
-
 
         } catch (error) {
 
             console.error(error);
 
             return res.status(500).json({
-
                 message:
                     "Server error during registration."
-
             });
-
         }
-
     }
 );
-
 
 // =====================================================
 // RESEND EMAIL OTP
@@ -738,46 +526,27 @@ app.post(
     "/api/resend-email-otp",
     (req, res) => {
 
-        const {
-            email
-        } = req.body;
-
+        const { email } = req.body;
 
         if (!email) {
 
             return res.status(400).json({
-
-                message:
-                    "Email is required."
-
+                message: "Email is required."
             });
-
         }
 
-
         const normalizedEmail =
-            email
-                .trim()
-                .toLowerCase();
-
+            email.trim().toLowerCase();
 
         const user =
-            findUserByEmail(
-                normalizedEmail
-            );
-
+            findUserByEmail(normalizedEmail);
 
         if (!user) {
 
             return res.status(404).json({
-
-                message:
-                    "User not found."
-
+                message: "User not found."
             });
-
         }
-
 
         const challenge =
             createOTPChallenge(
@@ -785,51 +554,22 @@ app.post(
                 "email"
             );
 
-
-        if (
-            challenge.cooldown
-        ) {
+        if (challenge.cooldown) {
 
             return res.status(429).json({
-
                 message:
                     `Please wait ${challenge.retryAfter} seconds before requesting another OTP.`
-
             });
-
         }
 
-
         console.log("");
-
-        console.log(
-            "================================="
-        );
-
-        console.log(
-            "[SIMULATED EMAIL OTP RESEND]"
-        );
-
-        console.log(
-            "To:",
-            user.email
-        );
-
-        console.log(
-            "OTP:",
-            challenge.otp
-        );
-
-        console.log(
-            "Expires in: 5 minutes"
-        );
-
-        console.log(
-            "================================="
-        );
-
+        console.log("=================================");
+        console.log("[SIMULATED EMAIL OTP RESEND]");
+        console.log("To:", user.email);
+        console.log("OTP:", challenge.otp);
+        console.log("Expires in: 5 minutes");
+        console.log("=================================");
         console.log("");
-
 
         return res.json({
 
@@ -838,12 +578,73 @@ app.post(
 
             challengeId:
                 challenge.challengeId
-
         });
-
     }
 );
 
+// =====================================================
+// REQUIRED EMAIL OTP ENDPOINT
+// =====================================================
+
+app.post(
+    "/api/send-email-otp",
+    (req, res) => {
+
+        const { email } = req.body;
+
+        if (!email) {
+
+            return res.status(400).json({
+                message: "Email is required."
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            findUserByEmail(normalizedEmail);
+
+        if (!user) {
+
+            return res.status(404).json({
+                message: "User not found."
+            });
+        }
+
+        const challenge =
+            createOTPChallenge(
+                user.user_id,
+                "email"
+            );
+
+        if (challenge.cooldown) {
+
+            return res.status(429).json({
+                message:
+                    `Please wait ${challenge.retryAfter} seconds before requesting another OTP.`
+            });
+        }
+
+        console.log("");
+        console.log("=================================");
+        console.log("[SIMULATED EMAIL]");
+        console.log("To:", user.email);
+        console.log("OTP:", challenge.otp);
+        console.log("Expires in: 5 minutes");
+        console.log("=================================");
+        console.log("");
+
+        return res.json({
+
+            message:
+                "Email OTP sent successfully.",
+
+            challengeId:
+                challenge.challengeId
+        });
+    }
+);
 
 // =====================================================
 // VERIFY EMAIL OTP
@@ -858,20 +659,13 @@ app.post(
             otp
         } = req.body;
 
-
-        if (
-            !isValidOTP(otp)
-        ) {
+        if (!isValidOTP(otp)) {
 
             return res.status(400).json({
-
                 message:
                     "OTP must contain exactly 6 digits."
-
             });
-
         }
-
 
         const result =
             verifyOTPChallenge(
@@ -880,41 +674,30 @@ app.post(
                 "email"
             );
 
-
         if (!result.success) {
 
             return res
                 .status(result.status)
                 .json({
-
                     message:
                         result.message,
 
                     attemptsRemaining:
                         result.attemptsRemaining
-
                 });
-
         }
-
 
         const user =
             findUserById(
                 result.challenge.user_id
             );
 
-
         if (!user) {
 
             return res.status(404).json({
-
-                message:
-                    "User not found."
-
+                message: "User not found."
             });
-
         }
-
 
         db
             .prepare(
@@ -926,7 +709,6 @@ app.post(
             )
             .run(user.user_id);
 
-
         return res.json({
 
             message:
@@ -934,12 +716,9 @@ app.post(
 
             userId:
                 user.user_id
-
         });
-
     }
 );
-
 
 // =====================================================
 // SEND SMS OTP
@@ -949,54 +728,32 @@ app.post(
     "/api/send-sms-otp",
     (req, res) => {
 
-        const {
-            userId
-        } = req.body;
-
+        const { userId } = req.body;
 
         if (!userId) {
 
             return res.status(400).json({
-
-                message:
-                    "User ID is required."
-
+                message: "User ID is required."
             });
-
         }
 
-
         const user =
-            findUserById(
-                userId
-            );
-
+            findUserById(userId);
 
         if (!user) {
 
             return res.status(404).json({
-
-                message:
-                    "User not found."
-
+                message: "User not found."
             });
-
         }
 
-
-        if (
-            !user.email_verified
-        ) {
+        if (!user.email_verified) {
 
             return res.status(403).json({
-
                 message:
                     "Please verify your email first."
-
             });
-
         }
-
 
         const challenge =
             createOTPChallenge(
@@ -1004,51 +761,22 @@ app.post(
                 "sms"
             );
 
-
-        if (
-            challenge.cooldown
-        ) {
+        if (challenge.cooldown) {
 
             return res.status(429).json({
-
                 message:
                     `Please wait ${challenge.retryAfter} seconds before requesting another OTP.`
-
             });
-
         }
 
-
         console.log("");
-
-        console.log(
-            "================================="
-        );
-
-        console.log(
-            "[SIMULATED SMS]"
-        );
-
-        console.log(
-            "To:",
-            user.phone
-        );
-
-        console.log(
-            "OTP:",
-            challenge.otp
-        );
-
-        console.log(
-            "Expires in: 5 minutes"
-        );
-
-        console.log(
-            "================================="
-        );
-
+        console.log("=================================");
+        console.log("[SIMULATED SMS]");
+        console.log("To:", user.phone);
+        console.log("OTP:", challenge.otp);
+        console.log("Expires in: 5 minutes");
+        console.log("=================================");
         console.log("");
-
 
         return res.json({
 
@@ -1057,12 +785,9 @@ app.post(
 
             challengeId:
                 challenge.challengeId
-
         });
-
     }
 );
-
 
 // =====================================================
 // VERIFY SMS OTP
@@ -1077,20 +802,13 @@ app.post(
             otp
         } = req.body;
 
-
-        if (
-            !isValidOTP(otp)
-        ) {
+        if (!isValidOTP(otp)) {
 
             return res.status(400).json({
-
                 message:
                     "OTP must contain exactly 6 digits."
-
             });
-
         }
-
 
         const result =
             verifyOTPChallenge(
@@ -1099,41 +817,30 @@ app.post(
                 "sms"
             );
 
-
         if (!result.success) {
 
             return res
                 .status(result.status)
                 .json({
-
                     message:
                         result.message,
 
                     attemptsRemaining:
                         result.attemptsRemaining
-
                 });
-
         }
-
 
         const user =
             findUserById(
                 result.challenge.user_id
             );
 
-
         if (!user) {
 
             return res.status(404).json({
-
-                message:
-                    "User not found."
-
+                message: "User not found."
             });
-
         }
-
 
         db
             .prepare(
@@ -1147,7 +854,6 @@ app.post(
             )
             .run(user.user_id);
 
-
         return res.json({
 
             message:
@@ -1156,14 +862,10 @@ app.post(
             userId:
                 user.user_id,
 
-            mfaEnabled:
-                true
-
+            mfaEnabled: true
         });
-
     }
 );
-
 
 // =====================================================
 // LOGIN
@@ -1180,61 +882,40 @@ app.post(
                 password
             } = req.body;
 
-
-            if (
-                !email ||
-                !password
-            ) {
+            if (!email || !password) {
 
                 return res.status(400).json({
-
                     message:
                         "Email and password are required."
-
                 });
-
             }
 
-
             const normalizedEmail =
-                email
-                    .trim()
-                    .toLowerCase();
-
+                email.trim().toLowerCase();
 
             const user =
                 findUserByEmail(
                     normalizedEmail
                 );
 
-
             if (!user) {
 
                 return res.status(401).json({
-
                     message:
                         "Invalid email or password."
-
                 });
-
             }
-
 
             if (
                 user.locked_until &&
-                Date.now() <
-                    user.locked_until
+                Date.now() < user.locked_until
             ) {
 
                 return res.status(423).json({
-
                     message:
                         "Account temporarily locked."
-
                 });
-
             }
-
 
             const correct =
                 await bcrypt.compare(
@@ -1242,12 +923,10 @@ app.post(
                     user.password_hash
                 );
 
-
             if (!correct) {
 
                 const failedAttempts =
                     user.failed_login_attempts + 1;
-
 
                 if (
                     failedAttempts >=
@@ -1257,7 +936,6 @@ app.post(
                     const lockedUntil =
                         Date.now() +
                         LOCKOUT_TIME;
-
 
                     db
                         .prepare(
@@ -1274,16 +952,11 @@ app.post(
                             user.user_id
                         );
 
-
                     return res.status(423).json({
-
                         message:
                             "Too many failed attempts. Account temporarily locked for 5 minutes."
-
                     });
-
                 }
-
 
                 db
                     .prepare(
@@ -1298,7 +971,6 @@ app.post(
                         user.user_id
                     );
 
-
                 return res.status(401).json({
 
                     message:
@@ -1307,11 +979,8 @@ app.post(
                     attemptsRemaining:
                         MAX_LOGIN_ATTEMPTS -
                         failedAttempts
-
                 });
-
             }
-
 
             db
                 .prepare(
@@ -1323,34 +992,21 @@ app.post(
                 )
                 .run(user.user_id);
 
-
-            if (
-                !user.email_verified
-            ) {
+            if (!user.email_verified) {
 
                 return res.status(403).json({
-
                     message:
                         "Please verify your email first."
-
                 });
-
             }
 
-
-            if (
-                !user.mfa_enabled
-            ) {
+            if (!user.mfa_enabled) {
 
                 return res.status(403).json({
-
                     message:
                         "MFA is not enabled."
-
                 });
-
             }
-
 
             const challenge =
                 createOTPChallenge(
@@ -1358,82 +1014,45 @@ app.post(
                     "login"
                 );
 
-
-            if (
-                challenge.cooldown
-            ) {
+            if (challenge.cooldown) {
 
                 return res.status(429).json({
-
                     message:
                         `Please wait ${challenge.retryAfter} seconds before requesting another OTP.`
-
                 });
-
             }
 
-
             console.log("");
-
-            console.log(
-                "================================="
-            );
-
-            console.log(
-                "[SIMULATED LOGIN EMAIL]"
-            );
-
-            console.log(
-                "To:",
-                user.email
-            );
-
-            console.log(
-                "OTP:",
-                challenge.otp
-            );
-
-            console.log(
-                "Expires in: 5 minutes"
-            );
-
-            console.log(
-                "================================="
-            );
-
+            console.log("=================================");
+            console.log("[SIMULATED LOGIN EMAIL]");
+            console.log("To:", user.email);
+            console.log("OTP:", challenge.otp);
+            console.log("Expires in: 5 minutes");
+            console.log("=================================");
             console.log("");
-
 
             return res.json({
 
                 message:
                     "Credentials valid. MFA verification required.",
 
-                mfaRequired:
-                    true,
+                mfaRequired: true,
 
                 challengeId:
                     challenge.challengeId
-
             });
-
 
         } catch (error) {
 
             console.error(error);
 
             return res.status(500).json({
-
                 message:
                     "Server error during login."
-
             });
-
         }
-
     }
 );
-
 
 // =====================================================
 // VERIFY LOGIN OTP
@@ -1448,20 +1067,13 @@ app.post(
             otp
         } = req.body;
 
-
-        if (
-            !isValidOTP(otp)
-        ) {
+        if (!isValidOTP(otp)) {
 
             return res.status(400).json({
-
                 message:
                     "OTP must contain exactly 6 digits."
-
             });
-
         }
-
 
         const result =
             verifyOTPChallenge(
@@ -1469,7 +1081,6 @@ app.post(
                 otp,
                 "login"
             );
-
 
         if (!result.success) {
 
@@ -1482,63 +1093,70 @@ app.post(
 
                     attemptsRemaining:
                         result.attemptsRemaining
-
                 });
-
         }
-
 
         const user =
             findUserById(
                 result.challenge.user_id
             );
 
-
         if (!user) {
 
             return res.status(404).json({
-
-                message:
-                    "User not found."
-
+                message: "User not found."
             });
-
         }
 
-
+        // Create authenticated session
         req.session.userId =
             user.user_id;
 
         req.session.email =
             user.email;
 
+        // Explicitly save the session before responding
+        req.session.save(
+            (error) => {
 
-        return res.json({
+                if (error) {
 
-            message:
-                "Login successful.",
+                    console.error(
+                        "Session save error:",
+                        error
+                    );
 
-            authenticated:
-                true,
+                    return res.status(500).json({
 
-            user: {
+                        message:
+                            "Unable to create login session."
+                    });
+                }
 
-                userId:
-                    user.user_id,
+                return res.json({
 
-                name:
-                    user.name,
+                    message:
+                        "Login successful.",
 
-                email:
-                    user.email
+                    authenticated:
+                        true,
 
+                    user: {
+
+                        userId:
+                            user.user_id,
+
+                        name:
+                            user.name,
+
+                        email:
+                            user.email
+                    }
+                });
             }
-
-        });
-
+        );
     }
 );
-
 
 // =====================================================
 // AUTHENTICATION MIDDLEWARE
@@ -1550,24 +1168,16 @@ function requireAuthentication(
     next
 ) {
 
-    if (
-        !req.session.userId
-    ) {
+    if (!req.session.userId) {
 
         return res.status(401).json({
-
             message:
                 "Authentication required."
-
         });
-
     }
 
-
     next();
-
 }
-
 
 // =====================================================
 // CURRENT USER
@@ -1583,28 +1193,21 @@ app.get(
                 req.session.userId
             );
 
-
         if (!user) {
 
             req.session.destroy(
                 () => {}
             );
 
-
             return res.status(401).json({
-
                 message:
                     "User session is invalid."
-
             });
-
         }
-
 
         return res.json({
 
-            authenticated:
-                true,
+            authenticated: true,
 
             user: {
 
@@ -1624,14 +1227,10 @@ app.get(
                     Boolean(
                         user.mfa_enabled
                     )
-
             }
-
         });
-
     }
 );
-
 
 // =====================================================
 // LOGOUT
@@ -1647,33 +1246,23 @@ app.post(
                 if (error) {
 
                     return res.status(500).json({
-
                         message:
                             "Logout failed."
-
                     });
-
                 }
-
 
                 res.clearCookie(
                     "connect.sid"
                 );
 
-
                 return res.json({
-
                     message:
                         "Logged out successfully."
-
                 });
-
             }
         );
-
     }
 );
-
 
 // =====================================================
 // FORGOT PASSWORD
@@ -1683,47 +1272,31 @@ app.post(
     "/api/forgot-password",
     (req, res) => {
 
-        const {
-            email
-        } = req.body;
-
+        const { email } = req.body;
 
         if (!email) {
 
             return res.status(400).json({
-
                 message:
                     "Email is required."
-
             });
-
         }
 
-
         const normalizedEmail =
-            email
-                .trim()
-                .toLowerCase();
-
+            email.trim().toLowerCase();
 
         const user =
             findUserByEmail(
                 normalizedEmail
             );
 
-
-        // Do not reveal whether account exists.
         if (!user) {
 
             return res.json({
-
                 message:
                     "If an account exists, a password reset OTP has been sent."
-
             });
-
         }
-
 
         const resetChallenge =
             createOTPChallenge(
@@ -1731,51 +1304,22 @@ app.post(
                 "reset"
             );
 
-
-        if (
-            resetChallenge.cooldown
-        ) {
+        if (resetChallenge.cooldown) {
 
             return res.status(429).json({
-
                 message:
                     `Please wait ${resetChallenge.retryAfter} seconds before requesting another OTP.`
-
             });
-
         }
 
-
         console.log("");
-
-        console.log(
-            "================================="
-        );
-
-        console.log(
-            "[SIMULATED PASSWORD RESET EMAIL]"
-        );
-
-        console.log(
-            "To:",
-            user.email
-        );
-
-        console.log(
-            "OTP:",
-            resetChallenge.otp
-        );
-
-        console.log(
-            "Expires in: 5 minutes"
-        );
-
-        console.log(
-            "================================="
-        );
-
+        console.log("=================================");
+        console.log("[SIMULATED PASSWORD RESET EMAIL]");
+        console.log("To:", user.email);
+        console.log("OTP:", resetChallenge.otp);
+        console.log("Expires in: 5 minutes");
+        console.log("=================================");
         console.log("");
-
 
         return res.json({
 
@@ -1784,12 +1328,9 @@ app.post(
 
             challengeId:
                 resetChallenge.challengeId
-
         });
-
     }
 );
-
 
 // =====================================================
 // VERIFY PASSWORD RESET OTP
@@ -1804,20 +1345,13 @@ app.post(
             otp
         } = req.body;
 
-
-        if (
-            !isValidOTP(otp)
-        ) {
+        if (!isValidOTP(otp)) {
 
             return res.status(400).json({
-
                 message:
                     "OTP must contain exactly 6 digits."
-
             });
-
         }
-
 
         const result =
             verifyOTPChallenge(
@@ -1825,7 +1359,6 @@ app.post(
                 otp,
                 "reset"
             );
-
 
         if (!result.success) {
 
@@ -1838,11 +1371,8 @@ app.post(
 
                     attemptsRemaining:
                         result.attemptsRemaining
-
                 });
-
         }
-
 
         return res.json({
 
@@ -1851,12 +1381,9 @@ app.post(
 
             resetToken:
                 challengeId
-
         });
-
     }
 );
-
 
 // =====================================================
 // RESET PASSWORD
@@ -1873,39 +1400,29 @@ app.post(
                 newPassword
             } = req.body;
 
-
             if (
                 !resetToken ||
                 !newPassword
             ) {
 
                 return res.status(400).json({
-
                     message:
                         "Reset token and new password are required."
-
                 });
-
             }
-
 
             const passwordError =
                 validatePassword(
                     newPassword
                 );
 
-
             if (passwordError) {
 
                 return res.status(400).json({
-
                     message:
                         passwordError
-
                 });
-
             }
-
 
             const challenge =
                 db
@@ -1918,18 +1435,13 @@ app.post(
                     )
                     .get(resetToken);
 
-
             if (!challenge) {
 
                 return res.status(404).json({
-
                     message:
                         "Password reset session not found."
-
                 });
-
             }
-
 
             if (
                 challenge.channel !==
@@ -1937,28 +1449,18 @@ app.post(
             ) {
 
                 return res.status(400).json({
-
                     message:
                         "Invalid password reset session."
-
                 });
-
             }
 
-
-            if (
-                !challenge.verified
-            ) {
+            if (!challenge.verified) {
 
                 return res.status(403).json({
-
                     message:
                         "Please verify the reset OTP first."
-
                 });
-
             }
-
 
             if (
                 Date.now() >
@@ -1966,39 +1468,29 @@ app.post(
             ) {
 
                 return res.status(400).json({
-
                     message:
                         "Password reset session has expired."
-
                 });
-
             }
-
 
             const user =
                 findUserById(
                     challenge.user_id
                 );
 
-
             if (!user) {
 
                 return res.status(404).json({
-
                     message:
                         "User not found."
-
                 });
-
             }
-
 
             const passwordHash =
                 await bcrypt.hash(
                     newPassword,
                     10
                 );
-
 
             db
                 .prepare(
@@ -2016,7 +1508,6 @@ app.post(
                     user.user_id
                 );
 
-
             db
                 .prepare(
                     `
@@ -2026,31 +1517,165 @@ app.post(
                 )
                 .run(resetToken);
 
-
             return res.json({
-
                 message:
                     "Password reset successfully."
-
             });
-
 
         } catch (error) {
 
             console.error(error);
 
             return res.status(500).json({
-
                 message:
                     "Server error while resetting password."
-
             });
-
         }
-
     }
 );
 
+// =====================================================
+// JWT TOKEN
+// =====================================================
+
+app.post(
+    "/api/token",
+    requireAuthentication,
+    (req, res) => {
+
+        const user =
+            findUserById(
+                req.session.userId
+            );
+
+        if (!user) {
+
+            return res.status(401).json({
+                message:
+                    "Authentication required."
+            });
+        }
+
+        if (!process.env.JWT_SECRET) {
+
+            return res.status(500).json({
+                message:
+                    "JWT secret is not configured."
+            });
+        }
+
+        const token =
+            jwt.sign(
+                {
+                    userId:
+                        user.user_id,
+
+                    email:
+                        user.email
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "15m"
+                }
+            );
+
+        return res.json({
+
+            message:
+                "JWT issued successfully.",
+
+            token,
+
+            expiresIn:
+                "15 minutes"
+        });
+    }
+);
+
+// =====================================================
+// JWT PROTECTED API
+// =====================================================
+
+app.get(
+    "/api/protected",
+    (req, res) => {
+
+        const authHeader =
+            req.headers.authorization;
+
+        if (
+            !authHeader ||
+            !authHeader.startsWith("Bearer ")
+        ) {
+
+            return res.status(401).json({
+                message:
+                    "JWT authorization required."
+            });
+        }
+
+        const token =
+            authHeader.substring(7);
+
+        if (!process.env.JWT_SECRET) {
+
+            return res.status(500).json({
+                message:
+                    "JWT secret is not configured."
+            });
+        }
+
+        try {
+
+            const decoded =
+                jwt.verify(
+                    token,
+                    process.env.JWT_SECRET
+                );
+
+            const user =
+                findUserById(
+                    decoded.userId
+                );
+
+            if (!user) {
+
+                return res.status(401).json({
+                    message:
+                        "User associated with JWT was not found."
+                });
+            }
+
+            return res.json({
+
+                message:
+                    "JWT authentication successful.",
+
+                authenticated:
+                    true,
+
+                user: {
+
+                    userId:
+                        user.user_id,
+
+                    name:
+                        user.name,
+
+                    email:
+                        user.email
+                }
+            });
+
+        } catch (error) {
+
+            return res.status(401).json({
+                message:
+                    "Invalid or expired JWT."
+            });
+        }
+    }
+);
 
 // =====================================================
 // TEST API
@@ -2061,15 +1686,11 @@ app.get(
     (req, res) => {
 
         res.json({
-
             message:
                 "Backend is working!"
-
         });
-
     }
 );
-
 
 // =====================================================
 // START SERVER
@@ -2085,6 +1706,5 @@ app.listen(
         console.log(
             `Server running at http://localhost:${PORT}`
         );
-
     }
 );
