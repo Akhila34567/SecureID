@@ -656,6 +656,9 @@ app.post(
         challenge.challengeId
 };
 
+response.debugEnabled =
+    process.env.OTP_DEBUG === "true";
+
 if (process.env.OTP_DEBUG === "true") {
 
     response.debugOtp =
