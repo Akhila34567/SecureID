@@ -559,17 +559,22 @@ app.post(
             );
             console.log("");
 
-            return res.status(201).json({
+            const response = {
 
-                message:
-                    "Registration started. Verify your email OTP.",
+    message:
+        "Registration started. Verify your email OTP.",
 
-                challengeId:
-                    challenge.challengeId,
+    challengeId:
+        challenge.challengeId,
 
-                userId
-            });
+    userId
+};
 
+if (process.env.OTP_DEBUG === "true") {
+    response.debugOtp = challenge.otp;
+}
+
+return res.status(201).json(response);
         } catch (error) {
 
             console.error(error);
