@@ -15,7 +15,8 @@ const {
 } = require("./database");
 
 const app = express();
-
+app.set("trust proxy", 1);
+app.use(express.json());
 // =====================================================
 // SETTINGS
 // =====================================================
